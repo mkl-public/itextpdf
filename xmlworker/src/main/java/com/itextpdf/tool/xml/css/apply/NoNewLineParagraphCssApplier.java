@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Balder Van Camp, Emiel Ackermann, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -52,14 +51,16 @@ import com.itextpdf.tool.xml.Tag;
 import com.itextpdf.tool.xml.css.CSS;
 import com.itextpdf.tool.xml.css.CssUtils;
 import com.itextpdf.tool.xml.css.FontSizeTranslator;
+import com.itextpdf.tool.xml.html.CssApplier;
 import com.itextpdf.tool.xml.html.pdfelement.NoNewLineParagraph;
+import com.itextpdf.tool.xml.pipeline.html.HtmlPipelineContext;
 
 /**
  *
  * @author itextpdf.com
  *
  */
-public class NoNewLineParagraphCssApplier {
+public class NoNewLineParagraphCssApplier implements CssApplier<NoNewLineParagraph>{
 	private final CssUtils utils = CssUtils.getInstance();
 
 
@@ -72,7 +73,10 @@ public class NoNewLineParagraphCssApplier {
 	 * @param configuration the MarginMemory to check margin sizes
 	 * @return a styled NoNewLineParagraph
 	 */
-	public NoNewLineParagraph apply(final NoNewLineParagraph p, final Tag t, final MarginMemory configuration) {
+        public NoNewLineParagraph apply(final NoNewLineParagraph p, final Tag t, final MarginMemory configuration) {
+            return apply(p, t, configuration, null, null);
+        }
+	public NoNewLineParagraph apply(final NoNewLineParagraph p, final Tag t, final MarginMemory configuration, final PageSizeContainable psc, final HtmlPipelineContext ctx) {
 		/*MaxLeadingAndSize m = new MaxLeadingAndSize();
 		if (configuration.getRootTags().contains(t.getName())) {
 			m.setLeading(t);

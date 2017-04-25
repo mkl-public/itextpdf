@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -959,9 +958,7 @@ public class PdfChunk {
     }
 
     public static boolean noPrint(int c) {
-        return c >= 0x200b && c <= 0x200f || c >= 0x202a && c <= 0x202e;
+        return c >= 0x200b && c <= 0x200f || c >= 0x202a && c <= 0x202e || c == '\u00AD';
     }
-
-
 
 }

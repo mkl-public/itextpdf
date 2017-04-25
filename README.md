@@ -1,4 +1,4 @@
-iText consists of several jars.
+[iText][itext] consists of several jars.
 
 The main iText release contains:
 - ```itextpdf-x.y.z.jar```: the core library
@@ -24,7 +24,7 @@ iText is licensed as [AGPL][agpl] software.
 
 AGPL is a free / open source software license.
 
-This doesn't mean the software is gratis!
+This doesn't mean the software is [gratis][gratis]!
 
 Buying a license is mandatory as soon as you develop commercial activities
 distributing the iText software inside your product or deploying it on a network
@@ -40,3 +40,5 @@ Contact sales for more info: http://itextpdf.com/sales
 [building]: BUILDING.md
 [contributing]: CONTRIBUTING.md
 [extrajars]: EXTRAJARS.md
+[itext]: http://itextpdf.com/
+[gratis]: https://en.wikipedia.org/wiki/Gratis_versus_libre

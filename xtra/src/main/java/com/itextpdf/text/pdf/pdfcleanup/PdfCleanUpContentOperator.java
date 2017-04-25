@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -344,13 +343,13 @@ class PdfCleanUpContentOperator implements ContentOperator {
      */
     private float getUnscaledTextChunkWidth(PdfCleanUpContentChunk.Text chunk, float characterSpacing,
                                             float wordSpacing, float fontSize, float horizontalScaling) {
-        // We should multiply by 100 because iText stores horizontal scaling as the value in [0, 1] interval;
+        // Horizontal scaling is stored as the value in [0, 1] interval, so we don't need to divide it on 100;
         // also we need to add character and word spaces because TextRenderInfo class truncates them from the end of the string
         // (single character string in our case is also truncated)
-        float scaledChunkWidth = (chunk.getEndX() - chunk.getStartX()) * 100f +
-              (characterSpacing + (isSpace(chunk) ? wordSpacing : 0)) * horizontalScaling * 100f;
+        float scaledChunkWidth = (chunk.getEndX() - chunk.getStartX()) +
+                (characterSpacing + (isSpace(chunk) ? wordSpacing : 0)) * horizontalScaling;
 
-        return -scaledChunkWidth * 1000f / (horizontalScaling * 100f * fontSize);
+        return -scaledChunkWidth * 1000f / (horizontalScaling * fontSize);
     }
 
     private boolean isSpace(PdfCleanUpContentChunk.Text chunk) {

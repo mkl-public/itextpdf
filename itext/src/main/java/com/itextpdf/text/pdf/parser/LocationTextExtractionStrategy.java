@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Kevin Day, Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -262,7 +261,7 @@ public class LocationTextExtractionStrategy implements TextExtractionStrategy {
         boolean isAtWordBoundary(TextChunkLocation previous);
     }
     
-    private static class TextChunkLocationDefaultImp implements TextChunkLocation {
+    public static class TextChunkLocationDefaultImp implements TextChunkLocation {
         
         /** the starting location of the chunk */
         private final Vector startLocation;

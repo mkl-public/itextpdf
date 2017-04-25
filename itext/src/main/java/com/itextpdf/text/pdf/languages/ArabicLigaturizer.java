@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -793,6 +792,7 @@ public class ArabicLigaturizer implements LanguageProcessor {
                     reverseLigatureMapTable.put(c[4], c[3]);
                 case 3:
                     reverseLigatureMapTable.put(c[2], c[1]);
+                    reverseLigatureMapTable.put(c[1], c[0]);
                     break;
             }   
             if (c[0] == 0x0637 || c[0] == 0x0638) {

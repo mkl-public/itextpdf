@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Balder Van Camp, Emiel Ackermann, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -64,6 +63,14 @@ public class CssResolverPipeline extends AbstractPipeline<ObjectContext<CSSResol
 
 	private CSSResolver resolver;
 
+    /**
+     * This allows the descendant classes to be fetched from the context.
+     */
+	@Override
+	public String getContextKey() {
+		return CssResolverPipeline.class.getName();
+	}
+
 	/* (non-Javadoc)
 	 * @see com.itextpdf.tool.xml.pipeline.AbstractPipeline#init(com.itextpdf.tool.xml.WorkerContext)
 	 */
@@ -77,6 +84,7 @@ public class CssResolverPipeline extends AbstractPipeline<ObjectContext<CSSResol
 			throw new PipelineException(e);
 		}
 	}
+
 	/**
 	 * @param next the next pipeline.
 	 * @param cssResolver the {@link CSSResolver} to use in this Pipeline, it

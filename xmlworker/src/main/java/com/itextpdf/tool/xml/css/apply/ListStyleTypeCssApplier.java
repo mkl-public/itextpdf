@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Balder Van Camp, Emiel Ackermann, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -65,6 +64,7 @@ import com.itextpdf.tool.xml.css.CSS;
 import com.itextpdf.tool.xml.css.CssUtils;
 import com.itextpdf.tool.xml.css.FontSizeTranslator;
 import com.itextpdf.tool.xml.exceptions.LocaleMessages;
+import com.itextpdf.tool.xml.html.CssApplier;
 import com.itextpdf.tool.xml.html.HTML;
 import com.itextpdf.tool.xml.net.ImageRetrieve;
 import com.itextpdf.tool.xml.net.exc.NoImageException;
@@ -76,7 +76,7 @@ import com.itextpdf.tool.xml.pipeline.html.UrlLinkResolver;
  * @author itextpdf.com
  *
  */
-public class ListStyleTypeCssApplier {
+public class ListStyleTypeCssApplier implements CssApplier<List> {
 
 	private final CssUtils utils = CssUtils.getInstance();
 	private static final Logger LOG = LoggerFactory.getLogger(ListStyleTypeCssApplier.class);
@@ -98,7 +98,10 @@ public class ListStyleTypeCssApplier {
 	 * @param context the context
 	 * @return the changed {@link List}
 	 */
-	public List apply(final List list, final Tag t, final HtmlPipelineContext context) {
+        public List apply(final List list, final Tag t, final HtmlPipelineContext context) {
+            return apply(list, t, null, null, context);
+        }
+	public List apply(final List list, final Tag t, final MarginMemory memory, final PageSizeContainable psc, final HtmlPipelineContext context) {
 		// not implemented: list-style-type:armenian, georgian, decimal-leading-zero.
 		float fontSize = FontSizeTranslator.getInstance().getFontSize(t);
 		List lst = list;
@@ -242,6 +245,6 @@ public class ListStyleTypeCssApplier {
 	 * @return styled element
 	 */
 	public Element apply(final List e, final Tag t) {
-		return apply(e, t, null);
+		return apply(e, t, null, null, null);
 	}
 }

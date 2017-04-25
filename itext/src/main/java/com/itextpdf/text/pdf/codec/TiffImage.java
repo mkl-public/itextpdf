@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -106,7 +105,10 @@ public class TiffImage {
             TIFFDirectory dir = new TIFFDirectory(s, page - 1);
             if (dir.isTagPresent(TIFFConstants.TIFFTAG_TILEWIDTH))
                 throw new IllegalArgumentException(MessageLocalization.getComposedMessage("tiles.are.not.supported"));
-            int compression = (int)dir.getFieldAsLong(TIFFConstants.TIFFTAG_COMPRESSION);
+            int compression = TIFFConstants.COMPRESSION_NONE;
+            if (dir.isTagPresent(TIFFConstants.TIFFTAG_COMPRESSION)) {
+                compression = (int)dir.getFieldAsLong(TIFFConstants.TIFFTAG_COMPRESSION);
+            }
             switch (compression) {
                 case TIFFConstants.COMPRESSION_CCITTRLEW:
                 case TIFFConstants.COMPRESSION_CCITTRLE:
@@ -317,7 +319,10 @@ public class TiffImage {
     
     protected static Image getTiffImageColor(TIFFDirectory dir, RandomAccessFileOrArray s) {
         try {
-            int compression = (int)dir.getFieldAsLong(TIFFConstants.TIFFTAG_COMPRESSION);
+            int compression = TIFFConstants.COMPRESSION_NONE;
+            if (dir.isTagPresent(TIFFConstants.TIFFTAG_COMPRESSION)) {
+                compression = (int)dir.getFieldAsLong(TIFFConstants.TIFFTAG_COMPRESSION);
+            }
             int predictor = 1;
             TIFFLZWDecoder lzwDecoder = null;
             switch (compression) {

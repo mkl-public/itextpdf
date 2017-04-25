@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Balder Van Camp, Emiel Ackermann, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -95,10 +94,10 @@ public class TableData extends AbstractTagProcessor {
 	public List<Element> end(final WorkerContext ctx, final Tag tag,
 			final List<Element> currentContent) {
 		HtmlCell cell = new HtmlCell();
-                int direction = getRunDirection(tag);
-                if (direction != PdfWriter.RUN_DIRECTION_DEFAULT) {
-                    cell.setRunDirection(direction);
-                }
+        int direction = getRunDirection(tag);
+        if (direction != PdfWriter.RUN_DIRECTION_NO_BIDI) {
+            cell.setRunDirection(direction);
+        }
 
         if (HTML.Tag.TH.equalsIgnoreCase(tag.getName())) {
             cell.setRole(PdfName.TH);

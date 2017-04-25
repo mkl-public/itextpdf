@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,15 +43,6 @@
  */
 package com.itextpdf.text.pdf.ocg;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.itextpdf.text.ExceptionConverter;
 import com.itextpdf.text.pdf.PRStream;
 import com.itextpdf.text.pdf.PRTokeniser;
@@ -65,6 +55,15 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfString;
 import com.itextpdf.text.pdf.RandomAccessFileOrArray;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * A helper class for OCGRemover.
  */
@@ -74,10 +73,15 @@ public class OCGParser {
     public static final String DEFAULTOPERATOR = "DefaultOperator";
     
 	/** A map with all supported operators operators (PDF syntax). */
-    protected static Map<String, PdfOperator> operators = null;
+    protected static final Map<String, PdfOperator> operators;
+
+	static {
+		operators = new HashMap<String, PdfOperator>();
+		populateOperators();
+	}
     
     /** The OutputStream of this worker object. */
-    protected static ByteArrayOutputStream baos;
+    protected ByteArrayOutputStream baos;
    
     /** Keeps track of BMC/EMC balance. */
     protected int mc_balance = 0;
@@ -96,7 +100,6 @@ public class OCGParser {
      * @param ocgs	a set of String values with the names of the OCGs that need to be removed.
      */
     public OCGParser(Set<String> ocgs) {
-    	populateOperators();
     	this.ocgs = ocgs;
     }
     
@@ -137,7 +140,34 @@ public class OCGParser {
             ArrayList<PdfObject> operands = new ArrayList<PdfObject>();
             while (ps.parse(operands).size() > 0){
                 PdfLiteral operator = (PdfLiteral)operands.get(operands.size() - 1);
-                processOperator(this, operator, operands);
+				processOperator(this, operator, operands);
+				if ("BI".equals(operator.toString())) {
+					int found = 0;
+					int ch;
+					boolean immediateAfterBI = true;
+					while ((ch = tokeniser.read()) != -1) {
+						if (!immediateAfterBI || !PRTokeniser.isWhitespace(ch)) {
+							baos.write(ch);
+						}
+						immediateAfterBI = false;
+						if (found == 0 && PRTokeniser.isWhitespace(ch)){
+							found++;
+						} else if (found == 1 && ch == 'E'){
+							found++;
+						} else if (found == 1 && PRTokeniser.isWhitespace(ch)){
+							// this clause is needed if we have a white space character that is part of the image data
+							// followed by a whitespace character that precedes the EI operator.  In this case, we need
+							// to flush the first whitespace, then treat the current whitespace as the first potential
+							// character for the end of stream check. Note that we don't increment 'found' here.
+						} else if (found == 2 && ch == 'I'){
+							found++;
+						} else if (found == 3 && PRTokeniser.isWhitespace(ch)){
+							break;
+						} else {
+							found = 0;
+						}
+					}
+				}
             }
         }
         catch (Exception e) {
@@ -165,10 +195,7 @@ public class OCGParser {
     /**
      * Populates the operators variable.
      */
-    protected void populateOperators() {
-    	if (operators != null)
-    		return;
-    	operators = new HashMap<String, PdfOperator>();
+    protected static void populateOperators() {
     	operators.put(DEFAULTOPERATOR, new CopyContentOperator());
     	PathConstructionOrPaintingOperator opConstructionPainting = new PathConstructionOrPaintingOperator();
     	operators.put("m", opConstructionPainting);
@@ -427,10 +454,13 @@ public class OCGParser {
 		 */
     	public void process(OCGParser parser, PdfLiteral operator,
     			List<PdfObject> operands) throws IOException {
-    		if ("BDC".equals(operator.toString()) && operands.size() > 1 && PdfName.OC.equals(operands.get(0))) {
-    			parser.checkMarkedContentStart((PdfName)operands.get(1));
-    		}
-    		else if ("BMC".equals(operator.toString())) {
+    		if ("BDC".equals(operator.toString())) {
+                    PdfName operand = null;
+                    if (operands.size() > 1 && PdfName.OC.equals(operands.get(0))) {
+    			operand = (PdfName) operands.get(1);
+                    }
+    			parser.checkMarkedContentStart(operand);
+    		} else if ("BMC".equals(operator.toString())) {
     			parser.checkMarkedContentStart(null);
     		}
 			parser.process(operator, operands, true);

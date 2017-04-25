@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Eugene Markovskyi, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -436,7 +435,7 @@ public class PdfStructTreeController {
             roleMap.put(structType, object);
         } else if ((currentRole = roleMap.get(structType)) != null) {
             if (!currentRole.equals(object)) {
-                throw new BadPdfFormatException(MessageLocalization.getComposedMessage("conflict.in.rolemap", object));
+                throw new BadPdfFormatException(MessageLocalization.getComposedMessage("conflict.in.rolemap", structType));
             }
         } else {
             roleMap.put(structType, object);

@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -418,7 +417,13 @@ public class CompareTool {
 
     public CompareTool() {
         gsExec = System.getProperty("gsExec");
+        if (gsExec == null) {
+            gsExec = System.getenv("gsExec");
+        }
         compareExec = System.getProperty("compareExec");
+        if (compareExec == null) {
+            compareExec = System.getenv("compareExec");
+        }
     }
 
     private String compare(String outPath, String differenceImagePrefix, Map<Integer, List<Rectangle>> ignoredAreas) throws IOException, InterruptedException, DocumentException {

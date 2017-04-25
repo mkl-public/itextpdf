@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -49,6 +48,7 @@ import com.itextpdf.text.List;
 import com.itextpdf.text.api.WriterOperation;
 import com.itextpdf.text.error_messages.MessageLocalization;
 import com.itextpdf.text.io.TempFileCache;
+import com.itextpdf.text.log.LoggerFactory;
 import com.itextpdf.text.pdf.collection.PdfCollection;
 import com.itextpdf.text.pdf.draw.DrawInterface;
 import com.itextpdf.text.pdf.interfaces.IAccessibleElement;
@@ -1728,7 +1728,15 @@ public class PdfDocument extends Document {
                         float matrix[] = image.matrix(chunk.getImageScalePercentage());
                         matrix[Image.CX] = xMarker + chunk.getImageOffsetX() - matrix[Image.CX];
                         matrix[Image.CY] = yMarker + chunk.getImageOffsetY() - matrix[Image.CY];
+                        boolean wasIntext = false;
+                        if ( graphics.getInText() && !(image instanceof ImgTemplate)) {
+                            wasIntext = true;
+                            graphics.endText();
+                        }
                         graphics.addImage(image, matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], false, isMCBlockOpened);
+                        if ( wasIntext ) {
+                            graphics.beginText(true);
+                        }
                         text.moveText(xMarker + lastBaseFactor + chunk.getImageWidth() - text.getXTLM(), 0);
                     }
                 }
@@ -2725,6 +2733,7 @@ public class PdfDocument extends Document {
             }
             currentHeight = indentTop() - ct.getYLine();
             newPage();
+            ptable.setSkipFirstHeader(false);
             if (isTagged(writer)) {
                 ct.setCanvas(text);
             }

@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Balder Van Camp, Emiel Ackermann, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -54,11 +53,13 @@ import com.itextpdf.tool.xml.css.CSS;
 import com.itextpdf.tool.xml.css.CssUtils;
 import com.itextpdf.tool.xml.css.HeightCalculator;
 import com.itextpdf.tool.xml.css.WidthCalculator;
+import com.itextpdf.tool.xml.html.CssApplier;
 import com.itextpdf.tool.xml.html.HTML;
 import com.itextpdf.tool.xml.html.pdfelement.HtmlCell;
 import com.itextpdf.tool.xml.html.table.CellSpacingEvent;
 import com.itextpdf.tool.xml.html.table.Table;
 import com.itextpdf.tool.xml.html.table.TableStyleValues;
+import com.itextpdf.tool.xml.pipeline.html.HtmlPipelineContext;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -67,7 +68,7 @@ import java.util.Map.Entry;
  * @author Emiel Ackermann
  *
  */
-public class HtmlCellCssApplier {
+public class HtmlCellCssApplier implements CssApplier<HtmlCell> {
 
     private final CssUtils utils = CssUtils.getInstance();
 
@@ -81,6 +82,9 @@ public class HtmlCellCssApplier {
 	 * @return a styled HtmlCell
 	 */
     public HtmlCell apply(final HtmlCell cell, final Tag t, final MarginMemory memory, final PageSizeContainable psc) {
+        return apply(cell, t, memory, psc, null);
+    }
+    public HtmlCell apply(final HtmlCell cell, final Tag t, final MarginMemory memory, final PageSizeContainable psc, final HtmlPipelineContext ctx) {
         Tag row = t.getParent();
         while(row != null && !row.getName().equals(HTML.Tag.TR)){
     		row = row.getParent();

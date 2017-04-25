@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -61,6 +60,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Michael Demey
@@ -69,6 +71,38 @@ public class FlatteningTest {
 
     private static final String RESOURCES_FOLDER = "./src/test/resources/com/itextpdf/text/pdf/FlatteningTest/";
     private static final String OUTPUT_FOLDER = "./target/com/itextpdf/test/pdf/FlatteningTest/";
+
+    @Test
+    public void testFlatteningNewAppearances() throws InterruptedException, DocumentException, IOException {
+        new File(OUTPUT_FOLDER).mkdirs();
+
+        final String OUT = "tpl3_flattened.pdf";
+
+        PdfReader reader = new PdfReader(RESOURCES_FOLDER + "tpl3.pdf");
+        AcroFields fields = reader.getAcroFields();
+        if (fields != null && fields.getFields() != null && fields.getFields().size() > 0) {
+            OutputStream out = null;
+            out = new FileOutputStream(OUTPUT_FOLDER + OUT);
+            PdfStamper stamp = new PdfStamper(reader, out);
+            stamp.setFormFlattening(true);
+            AcroFields form = stamp.getAcroFields();
+
+            Set<Map.Entry<String, AcroFields.Item>> map = form.getFields().entrySet();
+            for (Map.Entry<String, AcroFields.Item> e : map) {
+                form.setField(e.getKey(), e.getKey());
+            }
+
+            stamp.close();
+            out.close();
+        }
+        reader.close();
+
+        CompareTool compareTool = new CompareTool();
+        String errorMessage = compareTool.compare(OUTPUT_FOLDER + OUT, RESOURCES_FOLDER + "cmp_" + OUT, OUTPUT_FOLDER, "diff");
+        if (errorMessage != null) {
+            Assert.fail(errorMessage);
+        }
+    }
 
     @Test
     public void testFlattening() throws IOException, DocumentException, InterruptedException {
@@ -306,12 +340,37 @@ public class FlatteningTest {
 
     @Test
     public void testAnnotationFlatteningWithSkewAndRotation() throws IOException, DocumentException, InterruptedException {
+        new File(OUTPUT_FOLDER).mkdirs();
+        
         String file = "annotationWithTransformMatrix.pdf";
         PdfReader reader = new PdfReader(RESOURCES_FOLDER + file);
         PdfStamper stamper = new PdfStamper(reader, new FileOutputStream(OUTPUT_FOLDER + file));
         stamper.getWriter().setCompressionLevel(0);
         stamper.setAnnotationFlattening(true);
         stamper.close();
+        // compare
+        CompareTool compareTool = new CompareTool();
+        String errorMessage = compareTool.compareByContent(OUTPUT_FOLDER + file, RESOURCES_FOLDER + "cmp_" + file, OUTPUT_FOLDER, "diff");
+        if (errorMessage != null) {
+            Assert.fail(errorMessage);
+        }
+    }
+
+    @Test
+    public void testRotatedFilledField() throws IOException, DocumentException, InterruptedException {
+        new File(OUTPUT_FOLDER).mkdirs();
+
+        String file = "rotatedField.pdf";
+        PdfReader pdfReader = new PdfReader(RESOURCES_FOLDER + file);
+        PdfStamper pdfStamper = new PdfStamper(pdfReader, new FileOutputStream(OUTPUT_FOLDER + file));
+
+        AcroFields fields = pdfStamper.getAcroFields();
+        fields.setField("Text1", "TEST");
+        fields.setGenerateAppearances(true);
+
+        pdfStamper.setFormFlattening(true);
+        pdfStamper.close();
+        pdfReader.close();
         // compare
         CompareTool compareTool = new CompareTool();
         String errorMessage = compareTool.compareByContent(OUTPUT_FOLDER + file, RESOURCES_FOLDER + "cmp_" + file, OUTPUT_FOLDER, "diff");

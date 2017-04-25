@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -47,6 +46,7 @@ package com.itextpdf.text;
 import com.itextpdf.text.Font.FontFamily;
 import com.itextpdf.text.error_messages.MessageLocalization;
 import com.itextpdf.text.pdf.HyphenationEvent;
+import com.itextpdf.text.pdf.PdfName;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -405,7 +405,15 @@ public class Phrase extends ArrayList<Element> implements TextElementArray {
         if (size() > 0 && !chunk.hasAttributes()) {
             try {
                 Chunk previous = (Chunk) get(size() - 1);
-                if (!previous.hasAttributes() && !chunk.hasAccessibleAttributes() && !previous.hasAccessibleAttributes()
+                PdfName previousRole = previous.getRole();
+                PdfName chunkRole = chunk.getRole();
+                boolean sameRole;
+                if(previousRole == null || chunkRole == null)
+                	//Set the value to true if either are null since the overwriting of the role will not matter
+                	sameRole = true;
+                else
+                	sameRole = previousRole.equals(chunkRole);
+                if (sameRole && !previous.hasAttributes() && !chunk.hasAccessibleAttributes() && !previous.hasAccessibleAttributes()
                 		&& (f == null
                 		|| f.compareTo(previous.getFont()) == 0)
                 		&& !"".equals(previous.getContent().trim())

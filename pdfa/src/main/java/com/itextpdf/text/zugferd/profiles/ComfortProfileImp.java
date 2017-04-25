@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 2014-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -627,7 +626,7 @@ public class ComfortProfileImp extends BasicProfileImp implements ComfortProfile
         this.billingEndDateTimeFormat = billingEndDateTimeFormat;
     }
     
-    public void addSpecifiedTradeAllowanceCharge(Boolean indicator, String actualAmount, String actualAmountCurrency,
+    public void addSpecifiedTradeAllowanceCharge(boolean indicator, String actualAmount, String actualAmountCurrency,
             String reason, String[] typeCodes, String[] categoryCodes, String[] applicablePercent) {
         this.tradeAllowanceChargeIndicator.add(indicator);
         this.tradeAllowanceChargeActualAmount.add(actualAmount);

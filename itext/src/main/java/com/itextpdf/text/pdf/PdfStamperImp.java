@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,6 +43,7 @@
  */
 package com.itextpdf.text.pdf;
 
+import com.itextpdf.awt.geom.AffineTransform;
 import com.itextpdf.awt.geom.Point;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.ExceptionConverter;
@@ -734,6 +734,7 @@ class PdfStamperImp extends PdfWriter {
             ps = new PageStamp(this, reader, pageN);
             pagesToContent.put(pageN, ps);
         }
+        ps.pageN.setIndRef(reader.getPageOrigRef(pageNum));
         return ps;
     }
 
@@ -930,10 +931,14 @@ class PdfStamperImp extends PdfWriter {
                 PdfDictionary appDic = merged.getAsDict(PdfName.AP);
                 PdfObject as_n = null;
                 if (appDic != null) {
-                    as_n = appDic.getAsStream(PdfName.N);
+                    as_n = appDic.getDirectObject(PdfName.N);
+                    if (as_n == null)
+                        as_n = appDic.getAsStream(PdfName.N);
                     if (as_n == null)
                         as_n = appDic.getAsDict(PdfName.N);
                 }
+                //The rotation can be already applied if the appearance stream was written to document during setField method
+                boolean applyRotation = false;
                 if (acroFields.isGenerateAppearances()) {
                     if (appDic == null || as_n == null) {
                         try {
@@ -949,18 +954,35 @@ class PdfStamperImp extends PdfWriter {
                         PdfArray bbox = stream.getAsArray(PdfName.BBOX);
                         PdfArray rect = merged.getAsArray(PdfName.RECT);
                         if (bbox != null && rect != null) {
+                            applyRotation = true;
                             float rectWidth = rect.getAsNumber(2).floatValue() - rect.getAsNumber(0).floatValue();
                             float bboxWidth = bbox.getAsNumber(2).floatValue() - bbox.getAsNumber(0).floatValue();
                             float rectHeight = rect.getAsNumber(3).floatValue() - rect.getAsNumber(1).floatValue();
                             float bboxHeight = bbox.getAsNumber(3).floatValue() - bbox.getAsNumber(1).floatValue();
+                            //Take field rotation into account
+                            double fieldRotation = 0;
+                            if(merged.getAsDict(PdfName.MK) != null){
+                                if(merged.getAsDict(PdfName.MK).get(PdfName.R) != null){
+                                    fieldRotation = merged.getAsDict(PdfName.MK).getAsNumber(PdfName.R).floatValue();
+                                }
+                            }
+                            //Cast to radians
+                            fieldRotation = fieldRotation * Math.PI/180;
+                            //Clamp to [-2*Pi, 2*Pi]
+                            fieldRotation = fieldRotation%(2*Math.PI);
+
+                            if(fieldRotation%Math.PI != 0){
+                                float temp = rectWidth;
+                                rectWidth = rectHeight;
+                                rectHeight = temp;
+                            }
                             float widthCoef = Math.abs(bboxWidth != 0 ? rectWidth / bboxWidth : Float.MAX_VALUE);
                             float heightCoef = Math.abs(bboxHeight != 0 ? rectHeight / bboxHeight : Float.MAX_VALUE);
 
-                            if (widthCoef != 1 || heightCoef != 1) {
-                                NumberArray array = new NumberArray(widthCoef, 0, 0, heightCoef, 0, 0);
-                                stream.put(PdfName.MATRIX, array);
-                                markUsed(stream);
-                            }
+                            //Update matrix entry. Any field rotations present here will be overwritten and handled when adding the template to the canvas?
+                            NumberArray array = new NumberArray(widthCoef, 0, 0, heightCoef, 0, 0);
+                            stream.put(PdfName.MATRIX, array);
+                            markUsed(stream);
                         }
                     }
                 } else if (appDic != null && as_n != null) {
@@ -1017,7 +1039,27 @@ class PdfStamperImp extends PdfWriter {
                         Rectangle box = PdfReader.getNormalizedRectangle(merged.getAsArray(PdfName.RECT));
                         PdfContentByte cb = getOverContent(page);
                         cb.setLiteral("Q ");
-                        cb.addTemplate(app, box.getLeft(), box.getBottom());
+                        if (applyRotation) {
+                            /*
+                            Apply field rotation
+                             */
+                            AffineTransform tf = new AffineTransform();
+                            double fieldRotation = 0;
+                            if (merged.getAsDict(PdfName.MK) != null) {
+                                if (merged.getAsDict(PdfName.MK).get(PdfName.R) != null) {
+                                    fieldRotation = merged.getAsDict(PdfName.MK).getAsNumber(PdfName.R).floatValue();
+                                }
+                            }
+                            //Cast to radians
+                            fieldRotation = fieldRotation * Math.PI / 180;
+                            //Clamp to [-2*Pi, 2*Pi]
+                            fieldRotation = fieldRotation % (2 * Math.PI);
+                            //Calculate transformation matrix
+                            tf = calculateTemplateTransformationMatrix(tf, fieldRotation, box);
+                            cb.addTemplate(app, tf);
+                        } else {
+                            cb.addTemplate(app, box.getLeft(), box.getBottom());
+                        }
                         cb.setLiteral("q ");
                     }
                 }
@@ -1116,6 +1158,23 @@ class PdfStamperImp extends PdfWriter {
         acrodic.remove(PdfName.DR);
 //        PdfReader.killIndirect(acro);
 //        reader.getCatalog().remove(PdfName.ACROFORM);
+    }
+
+    private AffineTransform calculateTemplateTransformationMatrix(AffineTransform currentMatrix, double fieldRotation, Rectangle box) {
+        AffineTransform templateTransform = new AffineTransform(currentMatrix);
+        //Move to new origin
+        double x = box.getLeft();
+        double y = box.getBottom();
+        if (fieldRotation % (Math.PI / 2) == 0 && fieldRotation % (3 * Math.PI / 2) != 0 && fieldRotation != 0) {
+            x += box.getWidth();
+        }
+        if((fieldRotation%(3*Math.PI/2)==0 || fieldRotation%(Math.PI)==0) && fieldRotation != 0){
+            y+=box.getHeight();
+        }
+        templateTransform.translate(x,y);
+        //Apply fieldrotation
+        templateTransform.rotate(fieldRotation);
+        return templateTransform;
     }
 
     void sweepKids(PdfObject obj) {
@@ -1818,6 +1877,10 @@ class PdfStamperImp extends PdfWriter {
             return;
         }
         PdfArray ocgs = dict.getAsArray(PdfName.OCGS);
+        if (ocgs == null) {
+            ocgs = new PdfArray();
+            dict.put(PdfName.OCGS, ocgs);
+        }
         PdfIndirectReference ref;
         PdfLayer layer;
         HashMap<String, PdfLayer> ocgmap = new HashMap<String, PdfLayer>();

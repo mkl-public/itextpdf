@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Bruno Lowagie, Paulo Soares, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -142,7 +141,7 @@ public class ColumnText {
      */
     public static final int DIGIT_TYPE_AN_EXTENDED = ArabicLigaturizer.DIGIT_TYPE_AN_EXTENDED;
 
-    protected int runDirection = PdfWriter.RUN_DIRECTION_DEFAULT;
+    protected int runDirection = PdfWriter.RUN_DIRECTION_NO_BIDI;
 
     /**
      * the space char ratio
@@ -1022,10 +1021,7 @@ public class ColumnText {
         PdfContentByte graphics = null;
         PdfContentByte text = null;
         firstLineY = Float.NaN;
-        int localRunDirection = PdfWriter.RUN_DIRECTION_NO_BIDI;
-        if (runDirection != PdfWriter.RUN_DIRECTION_DEFAULT) {
-            localRunDirection = runDirection;
-        }
+        int localRunDirection = runDirection;
         if (canvas != null) {
             graphics = canvas;
             pdf = canvas.getPdfDocument();
@@ -1089,6 +1085,7 @@ public class ColumnText {
                 }
                 yLine -= currentLeading;
                 if (!simulate && !dirty) {
+                    // TODO this is not quite right. Currently, reversed chars may appear whenever bidi algorithm was applied, which is run direction is not NO_BIDI
                     if (line.isRTL && canvas.isTagged())
                     {
                         canvas.beginMarkedContentSequence(PdfName.REVERSEDCHARS);
@@ -1125,6 +1122,7 @@ public class ColumnText {
                 }
                 line = bidiLine.processLine(x1, x2 - x1 - firstIndent - rightIndent, alignment, localRunDirection, arabicOptions, minY, yLine, descender);
                 if (!simulate && !dirty) {
+                    // TODO this is not quite right. Currently, reversed chars may appear whenever bidi algorithm was applied, which is run direction is not NO_BIDI
                     if (line.isRTL && canvas.isTagged())
                     {
                         canvas.beginMarkedContentSequence(PdfName.REVERSEDCHARS);
@@ -1714,6 +1712,10 @@ public class ColumnText {
                 // get the PdfPTable element
                 PdfPTable table = (PdfPTable) element;
 
+                int backedUpRunDir = runDirection; // storing original run direction just in case
+                runDirection = table.getRunDirection(); // using table run direction
+                isRTL = runDirection == PdfWriter.RUN_DIRECTION_RTL;
+
                 // tables without a body are dismissed
                 if (table.size() <= table.getHeaderRows()) {
                     compositeElements.removeFirst();
@@ -1821,20 +1823,23 @@ public class ColumnText {
 
                 // IF ROWS MAY NOT BE SPLIT
                 if (!table.isSplitRows()) {
-                    splittedRow = -1;
-                    if (k == rowIdx) {
-                        // drop the whole table
-                        if (k == table.size()) {
-                            compositeElements.removeFirst();
-                            continue;
-                        } // or drop the row
-                        else {
-                            // don't drop the row if the table is incomplete and if there's only one row (not counting the header rows)
-                            // if there's only one row and this check wasn't here the row would have been deleted and not added at all
-                            if ( !(!table.isComplete() && k == 1 ) ) {
-                                table.getRows().remove(k);
+                    if (splittedRow != -1) {
+                        splittedRow = -1;
+                    } else {
+                        if (k == rowIdx) {
+                            // drop the whole table
+                            if (k == table.size()) {
+                                compositeElements.removeFirst();
+                                continue;
+                            } // or drop the row
+                            else {
+                                // don't drop the row if the table is incomplete and if there's only one row (not counting the header rows)
+                                // if there's only one row and this check wasn't here the row would have been deleted and not added at all
+                                if ( !(!table.isComplete() && k == 1 ) ) {
+                                    table.getRows().remove(k);
+                                }
+                                return NO_MORE_COLUMN;
                             }
-                            return NO_MORE_COLUMN;
                         }
                     }
                 } // IF ROWS SHOULD NOT BE SPLIT
@@ -1945,7 +1950,7 @@ public class ColumnText {
                         footerRows = 0;
                     }
 
-                    if (sub.size() > 0) {
+                    if (sub.size() - footerRows > 0) {
                         // we need a correction if the last row needs to be extended
                         float rowHeight = 0;
                         int lastIdx = sub.size() - 1 - footerRows;
@@ -2054,6 +2059,10 @@ public class ColumnText {
                     rowIdx = k;
                     return NO_MORE_COLUMN;
                 }
+
+                // restoring original run direction
+                runDirection = backedUpRunDir;
+                isRTL = runDirection == PdfWriter.RUN_DIRECTION_RTL;
             } else if (element.type() == Element.YMARK) {
                 if (!simulate) {
                     DrawInterface zh = (DrawInterface) element;

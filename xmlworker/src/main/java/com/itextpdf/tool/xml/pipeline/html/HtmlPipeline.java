@@ -1,8 +1,7 @@
 /*
- * $Id$
  *
  * This file is part of the iText (R) project.
- * Copyright (c) 1998-2015 iText Group NV
+    Copyright (c) 1998-2017 iText Group NV
  * Authors: Balder Van Camp, Emiel Ackermann, et al.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -70,6 +69,14 @@ public class HtmlPipeline extends AbstractPipeline<HtmlPipelineContext> {
 	public HtmlPipeline(final HtmlPipelineContext hpc, final Pipeline<?> next) {
 		super(next);
 		this.hpc = hpc;
+	}
+
+    /**
+     * This allows the descendant classes to be fetched from the context.
+     */
+	@Override
+	public String getContextKey() {
+		return HtmlPipeline.class.getName();
 	}
 
 	@Override
